@@ -16,15 +16,18 @@ from dashboard.radar import Radar
 from dashboard.pie import Pie
 from dashboard.player import Player
 
+
 def main():
-    authenticator = authenticate_user()
-    if st.session_state["authentication_status"] is False:
-        st.error("Username/password is incorrect")
-    elif st.session_state["authentication_status"] is None:
-        st.warning('Please enter your username and password')
+    authenticated = authenticate_user()
+
+    if st.session_state["authentication_status"] is None:
+        st.warning('Please Login using your designated google account.')
+    elif authenticated is False:
+        st.error("User not permitted")
+        st.stop()
     elif st.session_state["authentication_status"]:
         st.sidebar.success(f"Welcome, {st.session_state['name']}!")
-        authenticator.logout("Logout", "sidebar")
+        # authenticator.logout("Logout", "sidebar")
 
         st.write(
             """
