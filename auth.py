@@ -2,7 +2,6 @@ import yaml
 from yaml.loader import SafeLoader
 import streamlit as st
 import streamlit_authenticator as stauth
-from streamlit_elements import elements, dashboard, mui
 import random, string
 
 def generate_new_key(length=32):
@@ -38,6 +37,11 @@ def authenticate_user():
         )
     except Exception as e:
         st.error(e)
+
+    # To update the cookie config, fixes refresh unauthorized bug
+    # https://github.com/mkhorasani/Streamlit-Authenticator/issues/226
+    with open(config_file, "w") as file:
+        yaml.dump(config, file, default_flow_style=False)
 
     preauth_emails = config["pre-authorized"]["emails"]
     authenticated_email = st.session_state["username"]

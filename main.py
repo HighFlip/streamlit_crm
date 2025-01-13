@@ -4,10 +4,12 @@ import streamlit as st
 from pathlib import Path
 from streamlit import session_state as state
 from streamlit_elements import elements, sync, event
+from streamlit_elements import dashboard as st_dashboard
 from types import SimpleNamespace
 
 from auth import authenticate_user
 
+from dashboard.transaction_options import TransactionOptions
 from dashboard.dashboard import Dashboard
 from dashboard.editor import Editor
 from dashboard.card import Card
@@ -20,6 +22,14 @@ from dashboard.player import Player
 def main():
     authenticated = authenticate_user()
 
+    # Initialize session state variables if not already set
+    if "transaction_type" not in st.session_state:
+        st.session_state.transaction_type = ""
+    if "payment_method" not in st.session_state:
+        st.session_state.payment_method = ""
+    if "amount" not in st.session_state:
+        st.session_state.amount = ""
+
     if st.session_state["authentication_status"] is None:
         st.warning('Please Login using your designated google account.')
     elif authenticated is False:
@@ -27,43 +37,35 @@ def main():
         st.stop()
     elif st.session_state["authentication_status"]:
         st.sidebar.success(f"Welcome, {st.session_state['name']}!")
+
+        # Removed because of the use of guest login through google
         # authenticator.logout("Logout", "sidebar")
 
         st.write(
             """
-            ✨ Streamlit Elements &nbsp; [![GitHub][github_badge]][github_link] [![PyPI][pypi_badge]][pypi_link]
+            💼 Streamlit CRM &nbsp; [![GitHub][github_badge]][github_link]
             =====================
 
-            Create a draggable and resizable dashboard in Streamlit, featuring Material UI widgets,
-            Monaco editor (Visual Studio Code), Nivo charts, and more!
-
             [github_badge]: https://badgen.net/badge/icon/GitHub?icon=github&color=black&label
-            [github_link]: https://github.com/okld/streamlit-elements
-
-            [pypi_badge]: https://badgen.net/pypi/v/streamlit-elements?icon=pypi&color=black&label
-            [pypi_link]: https://pypi.org/project/streamlit-elements
+            [github_link]: https://github.com/HighFlip/streamlit_crm
             """
         )
-
-        st.title("")
+        st.write("Debugging Session State:")
+        st.write("Transaction Type:", st.session_state.get("transaction_type", ""))
+        st.write("Payment Method:", st.session_state.get("payment_method", ""))
+        st.write("Amount:", st.session_state.get("amount", ""))
+        # st.title("")
 
         if "w" not in state:
             board = Dashboard()
             w = SimpleNamespace(
                 dashboard=board,
-                editor=Editor(board, 0, 0, 6, 11, minW=3, minH=3),
-                player=Player(board, 0, 12, 6, 10, minH=5),
-                pie=Pie(board, 6, 0, 6, 7, minW=3, minH=4),
-                radar=Radar(board, 12, 7, 3, 7, minW=2, minH=4),
-                card=Card(board, 6, 7, 3, 7, minW=2, minH=4),
-                data_grid=DataGrid(board, 6, 13, 6, 7, minH=4),
+                data_grid=DataGrid(board, 0, 0, 6, 10, minW=4, minH=10),
+                transaction_options=TransactionOptions(board, 8, 0, 6, 5, minW=3, minH=4),
+                card2=Card(board, 8, 5, 6, 5, minW=3, minH=4),
             )
             state.w = w
 
-            w.editor.add_tab("Card content", Card.DEFAULT_CONTENT, "plaintext")
-            w.editor.add_tab("Data grid", json.dumps(DataGrid.DEFAULT_ROWS, indent=2), "json")
-            w.editor.add_tab("Radar chart", json.dumps(Radar.DEFAULT_DATA, indent=2), "json")
-            w.editor.add_tab("Pie chart", json.dumps(Pie.DEFAULT_DATA, indent=2), "json")
         else:
             w = state.w
 
@@ -71,12 +73,10 @@ def main():
             event.Hotkey("ctrl+s", sync(), bindInputs=True, overrideDefault=True)
 
             with w.dashboard(rowHeight=57):
-                w.editor()
-                w.player()
-                w.pie(w.editor.get_content("Pie chart"))
-                w.radar(w.editor.get_content("Radar chart"))
-                w.card(w.editor.get_content("Card content"))
-                w.data_grid(w.editor.get_content("Data grid"))
+                w.data_grid("")
+
+                w.transaction_options()
+                w.card2("Card 2")
 
 
 if __name__ == "__main__":
